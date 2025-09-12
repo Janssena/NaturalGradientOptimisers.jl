@@ -47,8 +47,6 @@ abstract type NaturalDescentRule <: Optimisers.AbstractRule end
 # end
 
 ##### Explicit natural descent.
-
-
 struct NaturalDescent <: NaturalDescentRule
     eta # Learning rate
     delta # Damping parameter with decay
@@ -56,10 +54,10 @@ struct NaturalDescent <: NaturalDescentRule
 end
 
 ##### NaturalDescentMean
-
 struct NaturalDescentMean <: NaturalDescentRule
     eta # Learning rate
     delta # Damping parameter
+    # TODO: Momentum
 end
 
 Optimisers.init(::NaturalDescentMean, x::AbstractVector) = 

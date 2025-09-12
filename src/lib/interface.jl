@@ -2,7 +2,7 @@
 Optimisers._setup(rule::NaturalDescentRule, x::NamedTuple; cache) = 
     fmapstructure_with_path(x; cache, walk = Optimisers.TrainableStructWalkWithPath()) do kp, x_
         error_string = "No μ, Σ, or σ² found in key path $(kp). Run `setup(natural_rule, fallback_rule, ps)` instead to use fallback rule."
-        if :μ in kp 
+        if kp[end] == :μ
             inner_rule = NaturalDescentMean(rule.eta, rule.delta)
             # get current variance:
             var_ = _get_corresponding_var(kp, x)
@@ -10,8 +10,8 @@ Optimisers._setup(rule::NaturalDescentRule, x::NamedTuple; cache) =
                 throw(ErrorException(error_string))
             end
             ℓ = Optimisers.Leaf(inner_rule, Optimisers.init(inner_rule, x_, var_)) 
-        elseif :Σ in kp || :σ² in kp || :S in kp
-            type = :S in kp ? NaturalDescentPrecision : NaturalDescentVariance
+        elseif kp[end] == :Σ || kp[end] == :σ² || kp[end] == :S
+            type = kp[end] == :S ? NaturalDescentPrecision : NaturalDescentVariance
             inner_rule = type(rule.eta)
             ℓ = Optimisers.Leaf(inner_rule, Optimisers.init(inner_rule, x_)) 
         else
@@ -38,7 +38,7 @@ Base.replace(kp::KeyPath, x::Pair) = KeyPath(replace(kp.keys, x))
 
 function update_state!(tree, x)
     fmap_with_path(x; walk = Optimisers.TrainableStructWalkWithPath()) do kp, x_
-        if :μ in kp
+        if kp[end] == :μ
             var_ = _get_corresponding_var(kp, x)
             var_mat = var_ isa AbstractVector ? collect(Diagonal(var_)) : Symmetric(var_)
             o = getkeypath(tree, kp)
