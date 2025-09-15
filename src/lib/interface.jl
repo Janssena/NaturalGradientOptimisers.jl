@@ -1,5 +1,5 @@
 # TODO: add extension for ComponentArrays?
-Optimisers._setup(rule::NaturalDescentRule, x::NamedTuple; cache) = 
+Optimisers._setup(rule::NaturalDescentRule, x::NamedTuple; cache = nothing) = 
     fmapstructure_with_path(x; cache, walk = Optimisers.TrainableStructWalkWithPath()) do kp, x_
         error_string = "No μ, Σ, or σ² found in key path $(kp). Run `setup(natural_rule, fallback_rule, ps)` instead to use fallback rule."
         if _kp_has_key(kp, :μ)
