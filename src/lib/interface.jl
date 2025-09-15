@@ -70,3 +70,13 @@ function update_state!(tree, x)
 
     return nothing
 end
+
+function update_epsilon!(rng::Random.AbstractRNG, st::NamedTuple)
+    fmap_with_path(st) do kp, x
+        if kp[end] == :epsilon
+            x .= randn(rng, eltype(x), size(x))
+        end
+        return x
+    end
+    return nothing
+end
