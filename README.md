@@ -20,7 +20,7 @@ Currently, we only support Gaussian distributions, meaning that the parameter ob
 
 The gradient with respect to μ can be estimated using the reparameterization trick, where we take a sample `z ~ N(μ, Σ)` and calculate the loss using the sample. This functionality is provided in the `sample_z(ps, st)` function, replacing the distribution parameters by `(z = ..., )` that can be used in the model definition to make predictions. The `epsilon` in `st` can be updated using `update_epsilon(rng, st)` to take a new sample from the variational distribution.
 
-The gradient with respect to Σ can be estimated from ∇z using the `estimate_covariance_gradient_from_dz(∇z, ps, st)` function. This function calculates ∇Σ ≈ Σ⁻¹(z - μ) ∇zᵀ. Alternatives are to calculate the gradient with respect to the original parameter object (which contains Σ), or by ∇Σ ≈ 0.5 ⋅ ∇²z.
+The gradient with respect to Σ can be estimated from ∇z using the `estimate_covariance_gradient_from_dz(∇z, ps, st)` function. This function calculates `∇Σ ≈ Σ⁻¹(z - μ) ∇zᵀ`. Alternatives are to calculate the gradient with respect to the original parameter object (which contains Σ), or by `∇Σ ≈ 0.5 ⋅ ∇²z`.
 
 We can estimate the full gradient using a single sample of z or by taking multiple samples:
 
