@@ -19,17 +19,22 @@ function estimate_covariance_gradient_from_dz(grad::NamedTuple, ps, st::NamedTup
     end
 end
 
-function estimate_covariance_gradient(dz::AbstractVector, ps::NamedTuple{(:μ,:S)}, ϵ::AbstractVector)
+estimate_covariance_gradient(dz::AbstractVector{<:AbstractArray}, ps, ϵ::AbstractVector{<:AbstractArray}) = 
+    map(eachindex(dz)) do i
+        estimate_covariance_gradient(dz[i], _take_idx(ps, i), ϵ[i])
+    end
+
+function estimate_covariance_gradient(dz::AbstractVector{<:Real}, ps::NamedTuple{(:μ,:S)}, ϵ::AbstractVector{<:Real})
     S̄ = (cholesky(ps.S).L' * ϵ) .* dz' # Σ⁻¹ (z - μ) == chol(S)' * ϵ
     return 0.25 .* (S̄ + S̄') # Ensure symmetry
 end
 
-function estimate_covariance_gradient(dz::AbstractVector, ps::NamedTuple{(:μ,:Σ)}, ϵ::AbstractVector)
+function estimate_covariance_gradient(dz::AbstractVector{<:Real}, ps::NamedTuple{(:μ,:Σ)}, ϵ::AbstractVector{<:Real})
     S̄ = (cholesky(ps.Σ).L' \ ϵ) .* dz' # Σ⁻¹ (z - μ) == chol(Σ)' \ ϵ
     return 0.25 .* (S̄ + S̄') # Ensure symmetry
 end
 
-function estimate_covariance_gradient(dz::AbstractVector, ps::NamedTuple{(:μ,:σ²)}, ϵ::AbstractVector)
+function estimate_covariance_gradient(dz::AbstractVector{<:Real}, ps::NamedTuple{(:μ,:σ²)}, ϵ::AbstractVector{<:Real})
     s̄ = (ϵ ./ sqrt.(ps.σ²)) .* dz # σ⁻² (z - μ) == ϵ ./ σ
     return 0.5 .* s̄
 end
@@ -66,16 +71,42 @@ function dlogq!(grad, ps)
 end
 
 function subtract_logq_grad!(∇::NamedTuple{(:μ,:σ²)}, ps::NamedTuple{(:μ,:σ²)})
-    ∇.σ² .= ∇.σ² - eltype(ps.σ²)(0.5) * (one(T) ./ ps.σ²)
+    if ps.σ² isa AbstractVector{<:AbstractArray}
+        T = eltype(first(ps.σ²))
+        for i in eachindex(ps.σ²)
+            ∇.σ²[i] .= ∇.σ²[i] - T(0.5) .* (one(T) ./ ps.σ²[i])
+        end
+    else
+        T = eltype(ps.σ²)
+        ∇.σ² .= ∇.σ² - T(0.5) .* (one(T) ./ ps.σ²)
+    end
+    
     return nothing
 end
 
 function subtract_logq_grad!(∇::NamedTuple{(:μ,:Σ)}, ps::NamedTuple{(:μ,:Σ)})
-    ∇.Σ .= ∇.Σ - eltype(ps.Σ)(0.5) * inv(ps.Σ)
+    if ps.Σ isa AbstractVector{<:AbstractArray}
+        T = eltype(first(ps.Σ))
+        for i in eachindex(ps.Σ)
+            ∇.Σ[i] .= ∇.Σ[i] - 0.5 * inv(ps.Σ[i])    
+        end
+    else
+        T = eltype(ps.Σ)
+        ∇.Σ .= ∇.Σ - 0.5 * inv(ps.Σ)
+    end
     return nothing
 end
 
 function subtract_logq_grad!(∇::NamedTuple{(:μ,:S)}, ps::NamedTuple{(:μ,:S)})
-    ∇.S .= ∇.S - eltype(ps.S)(0.5) * ps.S
+    if ps.S isa AbstractVector{<:AbstractArray}
+        T = eltype(first(ps.S))
+        for i in eachindex(ps.S)
+            ∇.S[i] .= ∇.S[i] - 0.5 * ps.S[i]
+        end
+    else
+        T = eltype(ps.S)
+        ∇.S .= ∇.S - 0.5 * ps.S
+    end
+
     return nothing
 end

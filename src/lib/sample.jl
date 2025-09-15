@@ -34,7 +34,16 @@ function _walk_until_gaussian(x)
     end    
 end
 
-sample_dist(::Static.StaticSymbol{:gaussian}, ps, st) = sample_gauss(ps, st)
+sample_dist(::Static.StaticSymbol{:gaussian}, ps::NamedTuple{<:Any, <:Tuple{<:AbstractVector{<:Real}, Vararg}}, st) = 
+    sample_gauss(ps, st)
+
+# Special version that works with parameters that feature vectors of 
+# distributions. Assumes that the first two elements correspond to the gaussian 
+# parameters.
+sample_dist(::Static.StaticSymbol{:gaussian}, ps::NamedTuple{<:Any, <:Tuple{<:AbstractVector{<:AbstractArray}, Vararg}}, st) = 
+    map(eachindex(ps.μ)) do i
+        sample_gauss(_take_idx(ps, i), _take_idx(st, i))
+    end
 
 # These are the function users should extend if their parameters 
 # (i.e. distributions) contain additional variables:
