@@ -7,6 +7,9 @@ import Static
 
 using Functors
 
+_kp_has_key(kp::KeyPath, key::Symbol) = 
+        kp[end] == key || (kp[end-1] == key && kp[end] isa Integer)
+
 include("lib/descent.jl");
 include("lib/interface.jl");
 
