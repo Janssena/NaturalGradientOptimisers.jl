@@ -1,6 +1,6 @@
 abstract type NaturalDescentRule <: Optimisers.AbstractRule end
 
-struct NaturalDescent{T<:Static.StaticSymbol} <: NaturalDescentRule
+struct NaturalDescent <: NaturalDescentRule
     eta # Learning rate
     delta # Damping parameter with decay
     NaturalDescent(eta = 0.1f0, delta = 0.f0) = new(eta, delta)

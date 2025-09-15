@@ -21,7 +21,7 @@ Optimisers._setup(rule::NaturalDescentRule, x::NamedTuple; cache) =
         return ℓ
     end
 
-Optimisers._setup(rule::NaturalDescent, fallback_rule::AbstractRule, x::NamedTuple; cache) = 
+Optimisers._setup(rule::NaturalDescentRule, fallback_rule::AbstractRule, x::NamedTuple; cache) = 
     fmapstructure_with_path(x; cache, walk = Optimisers.TrainableStructWalkWithPath()) do kp, x_
         if kp[end] == :μ
             inner_rule = NaturalDescentMean(rule.eta, rule.delta)
