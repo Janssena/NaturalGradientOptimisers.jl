@@ -29,18 +29,21 @@ M = 3 # number of Monte Carlo samples
 ∇_m = map(1:M) do m
     update_epsilon!(rng, st)
     ps_z = sample_z(ps, st)
-    ∇z = gradient(neg_logjoint, X, y, ps_z, st) # calculate gradient with respect to -p(x, z)
+    # calculate gradient with respect to -p(x, z):
+    ∇z = gradient(neg_logjoint, X, y, ps_z, st) 
     return estimate_covariance_gradient_from_dz(∇z, ps, st)
 end
 ∇ = fmap(Base.Fix2(/, M) ∘ +, ∇_m)
-dlogq!(∇, ps) # Finally, we add the gradient wrt E_q[log q(z)]
+# Finally, add the gradient wrt E_q[log q(z)]
+dlogq!(∇, ps)
 ```
 
 Next we can update the parameters using the update function from Optimisers.jl:
 
 ```julia
 opt_state, ps = Optimisers.update(opt_state, ps, ∇)
-update_state!(opt_state, ps) # updates the state of NaturalDescentMean with the updated variance
+# update the state of NaturalDescentMean with the updated variance:
+update_state!(opt_state, ps) 
 ```
 
 ### Next steps
