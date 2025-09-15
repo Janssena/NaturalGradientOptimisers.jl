@@ -21,6 +21,27 @@ Optimisers._setup(rule::NaturalDescentRule, x::NamedTuple; cache) =
         return ℓ
     end
 
+Optimisers._setup(rule::NaturalDescent, fallback_rule::AbstractRule, x::NamedTuple; cache) = 
+    fmapstructure_with_path(x; cache, walk = Optimisers.TrainableStructWalkWithPath()) do kp, x_
+        if kp[end] == :μ
+            inner_rule = NaturalDescentMean(rule.eta, rule.delta)
+            # get current variance:
+            var_ = _get_corresponding_var(kp, x)
+            if isnothing(var_)
+                throw(ErrorException(error_string))
+            end
+            ℓ = Optimisers.Leaf(inner_rule, Optimisers.init(inner_rule, x_, var_)) 
+        elseif kp[end] == :Σ || kp[end] == :σ² || kp[end] == :S
+            type = kp[end] == :S ? NaturalDescentPrecision : NaturalDescentVariance
+            inner_rule = type(rule.eta)
+            ℓ = Optimisers.Leaf(inner_rule, Optimisers.init(inner_rule, x_)) 
+        else
+            ℓ = Optimisers.Leaf(fallback_rule, Optimisers.init(fallback_rule, x_)) 
+        end
+
+        return ℓ
+    end
+
 _is_var_symbol(s::Symbol) = s == :Σ || s == :σ² || s == :S
 
 function _get_corresponding_var(kp::KeyPath, x)
