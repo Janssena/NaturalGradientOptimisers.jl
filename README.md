@@ -14,13 +14,13 @@ This adjustment often leads to:
 
 ### How to use the package.
 
-This package adopts the Lux.jl framework of separating learnable and fixed parameters into a parameter object `ps` and a state object `st`. The keys in these two objects match. We search `ps` for the parameters of a distribution and adds parameter specific optimizers (NaturalDescentMean or NaturalDescentVariance, for example). This means that the parameter object should contain a NamedTuple with keys pertaining to the distribution. 
+This package adopts the Lux.jl framework of separating learnable and fixed parameters into a parameter object `ps` and a state object `st`. The keys in these two objects match. The package searches `ps` for the parameters of a distribution and adds parameter specific optimizers (NaturalDescentMean or NaturalDescentVariance, for example). This means that the parameter object should contain a NamedTuple with keys pertaining to the distribution. 
 
 Currently, we only support Gaussian distributions, meaning that the parameter object should contain ```(μ = ..., σ² = ..., )``` for mean-field or ```(μ = ..., Σ = ..., )``` for full-rank variational posteriors. The corresponding state object should contain an `epsilon` key that contains samples `ϵ ~ N(0, 1)` that are used to sample from the variational distribution.
 
 The gradient with respect to μ can be estimated using the reparameterization trick, where we take a sample `z ~ N(μ, Σ)` and calculate the loss using the sample. This functionality is provided in the `sample_z(ps, st)` function, replacing the distribution parameters by `(z = ..., )` that can be used in the model definition to make predictions. The `epsilon` in `st` can be updated using `update_epsilon(rng, st)` to take a new sample from the variational distribution.
 
-The gradient with respect to Σ can be estimated from ∇z using the `estimate_covariance_gradient_from_dz(∇z, ps, st)` function. This function calculates `∇Σ ≈ Σ⁻¹(z - μ) ∇zᵀ`. Alternatives are to calculate the gradient with respect to the original parameter object (which contains Σ), or by `∇Σ ≈ 0.5 ⋅ ∇²z`.
+The gradient with respect to Σ can be estimated from ∇z using the `estimate_covariance_gradient_from_dz(∇z, ps, st)` function. This function calculates `∇Σ ≈ Σ⁻¹(z - μ) ∇zᵀ`. Alternatives are to calculate the gradient with respect to the original parameter object (which contains Σ), or by `∇Σ ≈ 0.5 ⋅ ∇²z`. The latter should be calculated separately and is not currently directly supported by the package.
 
 We can estimate the full gradient using a single sample of z or by taking multiple samples:
 
@@ -34,7 +34,7 @@ M = 3 # number of Monte Carlo samples
     return estimate_covariance_gradient_from_dz(∇z, ps, st)
 end
 ∇ = fmap(Base.Fix2(/, M) ∘ +, ∇_m)
-# Finally, add the gradient wrt E_q[log q(z)]
+# Finally, add the gradient wrt E_q[log q(z)]:
 dlogq!(∇, ps)
 ```
 
