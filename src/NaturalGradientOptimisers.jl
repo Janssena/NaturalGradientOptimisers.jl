@@ -8,10 +8,10 @@ import Static
 using Functors
 
 _kp_has_key(kp::KeyPath, key::Symbol) = 
-        kp[end] == key || (kp[end-1] == key && kp[end] isa Integer)
+        kp[end] == key || kp.keys[findlast(Base.Fix2(isa, Symbol), kp.keys)] == key
 
 _take_idx(x, i) = x
-_take_idx(x::AbstractVector{<:AbstractArray}, i) = x[i]
+_take_idx(x::AbstractVector{<:AbstractArray}, i) = x[i] # TODO: investigate use of views
 function _take_idx(x::NamedTuple, i) 
     keys_ = keys(x)
     values_ = map(keys_) do key # Almost a fmap, but does not recurse into indexes
@@ -29,7 +29,7 @@ export  NaturalDescent, NaturalDescentRule, update_state!,
 include("lib/gradients.jl");
 include("lib/sample.jl");
 
-export  estimate_covariance_gradient_from_dz, dlogq!, sample_z, 
-        sample_gauss
+export  estimate_covariance_gradient_from_dz, dlogq!, dgauss_kl!, 
+        sample_z, sample_gauss
 
 end # module NaturalGradientOptimisers

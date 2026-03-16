@@ -59,8 +59,8 @@ function Optimisers.apply!(
     dΣ::AbstractMatrix) where {T<:Real}
     
     η = convert(T, o.eta)
-    ĝ = 2 * (Σ * (dΣ) * Σ)
-    return state, η * ĝ - (abs2(η) / 2) * (ĝ * inv(Σ) * ĝ)
+    ĝ = T(2) * (Σ * (dΣ) * Σ)
+    return state, η * ĝ - (abs2(η) / T(2)) * (ĝ * inv(Σ) * ĝ)
 end
 
 function Optimisers.apply!(
@@ -70,8 +70,8 @@ function Optimisers.apply!(
     dσ²::AbstractVector{<:Real}) where {T<:Real}
 
     η = convert(T, o.eta)
-    ĝ = 2 * (σ² .* dσ² .* σ²)
-    return state, (η * ĝ) - (abs2(η) / 2) * (ĝ .* (one(T) ./ σ²) .* ĝ)
+    ĝ = T(2) * (σ² .* dσ² .* σ²)
+    return state, (η * ĝ) - (abs2(η) / T(2)) * (ĝ .* (one(T) ./ σ²) .* ĝ)
 end
 
 struct NaturalDescentPrecision <: NaturalDescentRule
@@ -87,10 +87,10 @@ function Optimisers.apply!(
     dS::AbstractMatrix) where {T<:Real}
     
     η = convert(T, o.eta)
-    ĝ = -2 * dS
+    ĝ = T(-2) * dS
     # Original equation says S - t * ĝ + t² / 2 * ĝ * S⁻¹ * ĝ
     # But since we are doing x - dx later this becomes  S - t * ĝ (-)! t² / 2...
-    return state, η * ĝ - (abs2(η) / 2) * (ĝ * inv(S) * ĝ)
+    return state, η * ĝ - (abs2(η) / T(2)) * (ĝ * inv(S) * ĝ)
 end
 
 function Optimisers.apply!(
@@ -100,8 +100,8 @@ function Optimisers.apply!(
     ds::AbstractVector{<:Real}) where {T<:Real}
 
     η = convert(T, o.eta)
-    ĝ = -2 * ds
-    return state, (η * ĝ) - (abs2(η) / 2) * (ĝ .* (one(T) ./ s) .* ĝ)
+    ĝ = T(-2) * ds
+    return state, (η * ĝ) - (abs2(η) / T(2)) * (ĝ .* (one(T) ./ s) .* ĝ)
 end
 
 Optimisers.subtract!(x::Symmetric, x̄) = 

@@ -21,6 +21,13 @@ Optimisers._setup(rule::NaturalDescentRule, x::NamedTuple; cache = nothing) =
         return ℓ
     end
 
+function Optimisers.setup(rule::NaturalDescentRule, fallback_rule::Optimisers.AbstractRule, model)
+    cache = IdDict()
+    tree = Optimisers._setup(rule, fallback_rule, model; cache)
+    isempty(cache) && @warn "setup found no trainable parameters in this model"
+    return tree
+end
+
 Optimisers._setup(rule::NaturalDescentRule, fallback_rule::Optimisers.AbstractRule, x::NamedTuple; cache = nothing) = 
     fmapstructure_with_path(x; cache, walk = Optimisers.TrainableStructWalkWithPath()) do kp, x_
         if _kp_has_key(kp, :μ)
@@ -42,10 +49,12 @@ Optimisers._setup(rule::NaturalDescentRule, fallback_rule::Optimisers.AbstractRu
         return ℓ
     end
 
+_is_var_symbol(s) = false
 _is_var_symbol(s::Symbol) = s == :Σ || s == :σ² || s == :S
 
 function _get_corresponding_var(kp::KeyPath, x)
-    parent = getkeypath(x, kp[1:end-1])
+    parent_idx = findlast(Base.Fix2(isa, Symbol), kp.keys)
+    parent = getkeypath(x, kp[1:(parent_idx-1)])
     var_symbol = filter(_is_var_symbol, keys(parent))
     if isempty(var_symbol)
         return nothing
